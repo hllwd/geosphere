@@ -145,7 +145,7 @@
     function drawCountry(points, color){
         var curvePath = createCurvePath(points);
         var lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices = curvePath.getPoints(100);
+        lineGeometry.vertices = curvePath.getPoints(500);
         lineGeometry.computeLineDistances();
         var lineMaterial = new THREE.LineBasicMaterial();
         lineMaterial.color = (typeof(color) === "undefined") ? new THREE.Color(0xFF0000) : new THREE.Color(color);
