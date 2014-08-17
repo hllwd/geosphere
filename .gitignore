@@ -1,0 +1,8 @@
+# webstorm
+.idea/*
+
+# node modules
+node_modules/*
+
+# bower modules
+js/bower_components

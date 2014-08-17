@@ -1,0 +1,21 @@
+{
+  "name": "geosphere",
+  "version": "0.0.0",
+  "homepage": "https://github.com/hllwd/geosphere",
+  "authors": [
+    "nicolas mondon <nicolasmondon@gmail.com>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1",
+    "threex.windowresize": "*"
+  }
+}
