@@ -3,9 +3,8 @@
  */
 ;!function(th, thx, $, Detector, win){
 
-    var container, scene, camera, renderer, projector;
+    var container, scene, camera, renderer;
     var controls;
-
 
     function onSetup(raw){
 
@@ -76,8 +75,15 @@
         skyBox = new th.Mesh(skyBoxGeometry, skyBoxMaterial);
         scene.add(skyBox);
 
-        // projector
-        projector = new th.Projector();
+        raw.features.forEach(function(feat){
+            if(feat.geometry.type === 'Polygon'){
+                drawCountry(feat.geometry.coordinates[0], 0xFF0000);
+            }else {
+                feat.geometry.coordinates.forEach(function(poly){
+                    drawCountry(poly[0], 0xFF0000);
+                });
+            }
+        });
 
         animate();
     };
@@ -128,6 +134,73 @@
 
     function render() {
         renderer.render(scene, camera);
+    };
+
+
+    /**
+     * @see https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Earth-LatLon.html
+     * @param points
+     * @param color
+     */
+    function drawCountry(points, color){
+        var curvePath = createCurvePath(points);
+        var lineGeometry = new THREE.Geometry();
+        lineGeometry.vertices = curvePath.getPoints(100);
+        lineGeometry.computeLineDistances();
+        var lineMaterial = new THREE.LineBasicMaterial();
+        lineMaterial.color = (typeof(color) === "undefined") ? new THREE.Color(0xFF0000) : new THREE.Color(color);
+        var line = new THREE.Line( lineGeometry, lineMaterial );
+        scene.add(line);
+    };
+
+    /**
+     * @see http://threejs.org/docs/#Reference/Extras.Core/CurvePath
+     * @param points
+     * @returns {THREE.CurvePath}
+     */
+    function createCurvePath(points){
+        var curvePath = new th.CurvePath();
+        var curve, pt1, pt2;
+        var r = 100;
+        for(var i = 0; i < points.length-1; i++){
+            pt1 = latLong2Cart(points[i][0], points[i][1], r);
+            pt2 = latLong2Cart(points[i+1][0], points[i+1][1], r);
+            curve = createCurve(pt1, pt2);
+            curvePath.add(curve);
+        }
+        curvePath.closePath();
+        return curvePath;
+    };
+
+    /**
+     * @see https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Earth-LatLon.html
+     * @param pt1
+     * @param pt2
+     * @returns {THREE.Curve}
+     */
+    function createCurve(pt1, pt2){
+        var sphereCurve = new th.Curve();
+        var angle = pt1.angleTo(pt2);
+        sphereCurve.getPoint = function(t){
+            return new th.Vector3().addVectors(
+                pt1.clone().multiplyScalar(Math.sin( (1 - t) * angle )),
+                pt2.clone().multiplyScalar(Math.sin( t  * angle ))
+            ).divideScalar( Math.sin(angle) );
+        };
+        return sphereCurve;
+    };
+
+    function latLong2Cart(lon, lat, r){
+        lon = deg2Rad(lon);
+        // -lat to display in the right side
+        lat = deg2Rad(-lat);
+        return  new th.Vector3( -r * Math.cos(lat) * Math.cos(lon),
+            -r * Math.sin(lat),
+            r * Math.cos(lat) * Math.sin(lon) );
+    };
+
+    function deg2Rad(x) {
+        return 2 * Math.PI * x / 360;
     };
 
     $.getJSON('data/countries.geo.json').done(onSetup);
