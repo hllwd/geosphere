@@ -34,7 +34,7 @@
         // add the camera to the scene at the default position (0,0,0)
         scene.add(camera);
         // so pull it back
-        camera.position.set(-600, 600, -600);
+        camera.position.set(-300, 300, -300);
         // and set the angle towards the scene origin
         camera.lookAt(scene.position);
 
@@ -77,7 +77,7 @@
         skyBox = new th.Mesh(skyBoxGeometry, skyBoxMaterial);
         scene.add(skyBox);
 
-        drawSphere();
+        //drawSphere();
 
         drawCountries(raw.features);
 
@@ -143,10 +143,10 @@
     function drawCountries(countries){
         countries.forEach(function(feat){
             if(feat.geometry.type === 'Polygon'){
-                drawCountry(feat.geometry.coordinates[0], 0xFFFFFF);
-            }else {
+                drawCountry2(feat.geometry.coordinates[0], 0xFF0000);
+            }else { // multiple polygons
                 feat.geometry.coordinates.forEach(function(poly){
-                    drawCountry(poly[0], 0xFFFFFF);
+                    drawCountry(poly[0], 0xFF0000);
                 });
             }
         });
@@ -163,9 +163,19 @@
         lineGeometry.vertices = curvePath.getPoints(500);
         lineGeometry.computeLineDistances();
         var lineMaterial = new THREE.LineBasicMaterial();
-        lineMaterial.color = (typeof(color) === 'undefined') ? new THREE.Color(0xFF0000) : new THREE.Color(color);
+        lineMaterial.color = new THREE.Color(color);
         var line = new THREE.Line( lineGeometry, lineMaterial );
         scene.add(line);
+    };
+
+    function drawCountry2(points, color){
+        var curvePath = createCurvePath(points);
+        var shape = new th.Shape(curvePath.getPoints(500));
+        var shapeGeometry = new th.ShapeGeometry(shape);
+        var shapeMaterial = new THREE.MeshLambertMaterial( { color: color } );
+        shapeMaterial.side = th.DoubleSide;
+        var mesh = new th.Mesh(shapeGeometry, shapeMaterial);
+        scene.add(mesh);
     };
 
     /**
@@ -185,6 +195,7 @@
         curvePath.closePath();
         return curvePath;
     };
+
 
     /**
      * @see https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Earth-LatLon.html
