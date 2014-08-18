@@ -6,6 +6,8 @@
     var container, scene, camera, renderer;
     var controls;
 
+    var radiusSphere = 100, radiusCountries = 100.1;
+
     function onSetup(raw){
 
         // width
@@ -75,15 +77,9 @@
         skyBox = new th.Mesh(skyBoxGeometry, skyBoxMaterial);
         scene.add(skyBox);
 
-        raw.features.forEach(function(feat){
-            if(feat.geometry.type === 'Polygon'){
-                drawCountry(feat.geometry.coordinates[0], 0xFF0000);
-            }else {
-                feat.geometry.coordinates.forEach(function(poly){
-                    drawCountry(poly[0], 0xFF0000);
-                });
-            }
-        });
+        drawSphere();
+
+        drawCountries(raw.features);
 
         animate();
     };
@@ -136,6 +132,25 @@
         renderer.render(scene, camera);
     };
 
+    function drawSphere(){
+        var sphereGeometry = new th.SphereGeometry(radiusSphere, 32, 32);
+        var sphereMaterial = new th.MeshLambertMaterial({ color: new th.Color(0x0000CC) });
+        var sphereMesh = new th.Mesh(sphereGeometry, sphereMaterial);
+        sphereMesh.position = new th.Vector3(0,0,0);
+        scene.add(sphereMesh);
+    };
+
+    function drawCountries(countries){
+        countries.forEach(function(feat){
+            if(feat.geometry.type === 'Polygon'){
+                drawCountry(feat.geometry.coordinates[0], 0xFFFFFF);
+            }else {
+                feat.geometry.coordinates.forEach(function(poly){
+                    drawCountry(poly[0], 0xFFFFFF);
+                });
+            }
+        });
+    };
 
     /**
      * @see https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Earth-LatLon.html
@@ -148,7 +163,7 @@
         lineGeometry.vertices = curvePath.getPoints(500);
         lineGeometry.computeLineDistances();
         var lineMaterial = new THREE.LineBasicMaterial();
-        lineMaterial.color = (typeof(color) === "undefined") ? new THREE.Color(0xFF0000) : new THREE.Color(color);
+        lineMaterial.color = (typeof(color) === 'undefined') ? new THREE.Color(0xFF0000) : new THREE.Color(color);
         var line = new THREE.Line( lineGeometry, lineMaterial );
         scene.add(line);
     };
@@ -161,10 +176,9 @@
     function createCurvePath(points){
         var curvePath = new th.CurvePath();
         var curve, pt1, pt2;
-        var r = 100;
         for(var i = 0; i < points.length-1; i++){
-            pt1 = latLong2Cart(points[i][0], points[i][1], r);
-            pt2 = latLong2Cart(points[i+1][0], points[i+1][1], r);
+            pt1 = latLong2Cart(points[i][0], points[i][1], radiusCountries);
+            pt2 = latLong2Cart(points[i+1][0], points[i+1][1], radiusCountries);
             curve = createCurve(pt1, pt2);
             curvePath.add(curve);
         }
