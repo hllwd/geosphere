@@ -58,7 +58,7 @@
         thx.WindowResize(renderer, camera);
 
         // controls
-        controls = new th.OrbitControls(camera, renderer.domElement);
+        controls = new th.TrackballControls(camera, renderer.domElement);
 
         // lights
         setupLight();
@@ -176,6 +176,12 @@
         shapeMaterial.side = th.DoubleSide;
         var mesh = new th.Mesh(shapeGeometry, shapeMaterial);
         scene.add(mesh);
+    };
+
+    function drawCountry3(points, color){
+        var curvePath = createCurvePath(points);
+        var convexGeometry = new th.ConvexGeometry( points )
+
     };
 
     /**
