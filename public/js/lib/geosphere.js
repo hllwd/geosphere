@@ -6,7 +6,7 @@
     var container, scene, camera, renderer;
     var controls;
 
-    var radiusSphere = 100, radiusCountries = 100.1;
+    var radiusSphere = 90, radiusCountries = 100;
 
     function onSetup(raw){
 
@@ -77,7 +77,7 @@
         skyBox = new th.Mesh(skyBoxGeometry, skyBoxMaterial);
         scene.add(skyBox);
 
-        //drawSphere();
+        drawSphere();
 
         drawCountries(raw.features);
 
@@ -133,8 +133,9 @@
     };
 
     function drawSphere(){
-        var sphereGeometry = new th.SphereGeometry(radiusSphere, 32, 32);
+        var sphereGeometry = new th.SphereGeometry(radiusSphere, 64, 64);
         var sphereMaterial = new th.MeshLambertMaterial({ color: new th.Color(0x0000CC) });
+        sphereMaterial.side = th.DoubleSide;
         var sphereMesh = new th.Mesh(sphereGeometry, sphereMaterial);
         sphereMesh.position = new th.Vector3(0,0,0);
         scene.add(sphereMesh);
@@ -143,7 +144,7 @@
     function drawCountries(countries){
         countries.forEach(function(feat){
             if(feat.geometry.type === 'Polygon'){
-                drawCountry2(feat.geometry.coordinates[0], 0xFF0000);
+                drawCountry(feat.geometry.coordinates[0], 0xFF0000);
             }else { // multiple polygons
                 feat.geometry.coordinates.forEach(function(poly){
                     drawCountry(poly[0], 0xFF0000);
@@ -178,10 +179,51 @@
         scene.add(mesh);
     };
 
-    function drawCountry3(points, color){
-        var curvePath = createCurvePath(points);
-        var convexGeometry = new th.ConvexGeometry( points )
 
+    /**
+     * @see http://stackoverflow.com/questions/9252764/how-to-create-a-custom-mesh-on-three-js
+     * @param points
+     * @param color
+     */
+    function drawCountry3(points, color){
+        var triangles, mesh;
+        var holes = [];
+
+        var curvePath = createCurvePath(points);
+        var vertices = curvePath.getPoints(250);
+        var geometry = new th.Geometry();
+        var material = new th.MeshBasicMaterial( { color: color } );
+        material.side = th.DoubleSide;
+
+        geometry.vertices = vertices;
+        triangles = th.Shape.Utils.triangulateShape ( vertices, holes );
+
+        for( var i = 0; i < triangles.length; i++ ){
+            geometry.faces.push( new th.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
+        }
+        mesh = new th.Mesh( geometry, material );
+        scene.add(mesh);
+
+    };
+
+    function drawCountry4(points, color){
+        var triangles, mesh;
+        var holes = [];
+
+        var curvePath = createCurvePath(points);
+        var vertices = curvePath.getPoints(250);
+        var geometry = new th.PolyhedronGeometry();
+        var material = new th.MeshBasicMaterial( { color: color } );
+        material.side = th.DoubleSide;
+
+        geometry.vertices = vertices;
+        triangles = th.Shape.Utils.triangulateShape ( vertices, holes );
+
+        for( var i = 0; i < triangles.length; i++ ){
+            geometry.faces.push( new th.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
+        }
+        mesh = new th.Mesh( geometry, material );
+        scene.add(mesh);
     };
 
     /**
