@@ -206,26 +206,6 @@
 
     };
 
-    function drawCountry4(points, color){
-        var triangles, mesh;
-        var holes = [];
-
-        var curvePath = createCurvePath(points);
-        var vertices = curvePath.getPoints(250);
-        var geometry = new th.PolyhedronGeometry();
-        var material = new th.MeshBasicMaterial( { color: color } );
-        material.side = th.DoubleSide;
-
-        geometry.vertices = vertices;
-        triangles = th.Shape.Utils.triangulateShape ( vertices, holes );
-
-        for( var i = 0; i < triangles.length; i++ ){
-            geometry.faces.push( new th.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
-        }
-        mesh = new th.Mesh( geometry, material );
-        scene.add(mesh);
-    };
-
     /**
      * @see http://threejs.org/docs/#Reference/Extras.Core/CurvePath
      * @param points
