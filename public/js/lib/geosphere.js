@@ -6,7 +6,7 @@
     var container, scene, camera, renderer;
     var controls;
 
-    var radiusSphere = 90, radiusCountries = 100;
+    var radiusSphere = 100, radiusCountries = 100.5;
 
     function onSetup(raw){
 
@@ -60,11 +60,8 @@
         // controls
         controls = new th.TrackballControls(camera, renderer.domElement);
 
-        // lights
-        setupLight();
-
         // axes
-        axes = new th.AxisHelper(100);
+        axes = new th.AxisHelper(200);
         scene.add(axes);
 
         // sky
@@ -88,36 +85,6 @@
 
     };
 
-    // from http://stackoverflow.com/questions/15478093/realistic-lighting-sunlight-with-th-js
-    function setupLight() {
-        // lights
-        var hemiLight = new th.HemisphereLight(0xffffff, 0xffffff, 0.6);
-        hemiLight.position.set(0, 500, 0);
-
-        var dirLight = new th.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(-1, 0.75, 1);
-        dirLight.position.multiplyScalar(50);
-        dirLight.name = 'dirlight';
-        // dirLight.shadowCameraVisible = true;
-
-        dirLight.castShadow = true;
-        dirLight.shadowMapWidth = dirLight.shadowMapHeight = 1024 * 2;
-
-        var d = 300;
-
-        dirLight.shadowCameraLeft = -d;
-        dirLight.shadowCameraRight = d;
-        dirLight.shadowCameraTop = d;
-        dirLight.shadowCameraBottom = -d;
-
-        dirLight.shadowCameraFar = 3500;
-        dirLight.shadowBias = -0.0001;
-        dirLight.shadowDarkness = 0.35;
-
-        scene.add(hemiLight);
-        scene.add(dirLight);
-    };
-
     function animate() {
         requestAnimationFrame(animate);
         render();
@@ -134,9 +101,15 @@
 
     function drawSphere(){
         var sphereGeometry = new th.SphereGeometry(radiusSphere, 64, 64);
-        var sphereMaterial = new th.MeshLambertMaterial({ color: new th.Color(0x0000CC) });
-        sphereMaterial.side = th.DoubleSide;
-        var sphereMesh = new th.Mesh(sphereGeometry, sphereMaterial);
+
+        var vShader = $('#vertexshader');
+        var fShader = $('#fragmentshader');
+        var shaderMaterial =
+            new THREE.ShaderMaterial({
+                vertexShader:   vShader.text(),
+                fragmentShader: fShader.text()
+            });
+        var sphereMesh = new th.Mesh(sphereGeometry, shaderMaterial);
         sphereMesh.position = new th.Vector3(0,0,0);
         scene.add(sphereMesh);
     };
@@ -165,6 +138,7 @@
         lineGeometry.computeLineDistances();
         var lineMaterial = new THREE.LineBasicMaterial();
         lineMaterial.color = new THREE.Color(color);
+        lineMaterial.linewidth = 2;
         var line = new THREE.Line( lineGeometry, lineMaterial );
         scene.add(line);
     };
