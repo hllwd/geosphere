@@ -37,7 +37,7 @@ void main() {
 
   gl_Position = projectionMatrix *
                 modelViewMatrix *
-                vec4(position, 1.0);
+                vec4(position, 1);
 }
 
 	</script>
@@ -65,9 +65,10 @@ void main() {
   gl_FragColor = vec4(dProd, // R
                       dProd, // G
                       dProd, // B
-                      1.0);  // A
+                      1);  // A
 
 }
+
 	</script>
 <!-- End Shaders -->
 

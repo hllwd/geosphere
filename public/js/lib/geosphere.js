@@ -8,6 +8,8 @@
 
     var radiusSphere = 100, radiusCountries = 100.5;
 
+    var shaderMaterial;
+
     function onSetup(raw){
 
         // width
@@ -74,6 +76,8 @@
         skyBox = new th.Mesh(skyBoxGeometry, skyBoxMaterial);
         scene.add(skyBox);
 
+        setupShaderMaterial();
+
         drawSphere();
 
         drawCountries(raw.features);
@@ -99,16 +103,18 @@
         renderer.render(scene, camera);
     };
 
-    function drawSphere(){
-        var sphereGeometry = new th.SphereGeometry(radiusSphere, 64, 64);
-
+    function setupShaderMaterial(){
         var vShader = $('#vertexshader');
         var fShader = $('#fragmentshader');
-        var shaderMaterial =
+        shaderMaterial =
             new THREE.ShaderMaterial({
                 vertexShader:   vShader.text(),
                 fragmentShader: fShader.text()
             });
+    };
+
+    function drawSphere(){
+        var sphereGeometry = new th.SphereGeometry(radiusSphere, 64, 64);
         var sphereMesh = new th.Mesh(sphereGeometry, shaderMaterial);
         sphereMesh.position = new th.Vector3(0,0,0);
         scene.add(sphereMesh);
