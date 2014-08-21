@@ -16,6 +16,8 @@
   ],
   "dependencies": {
     "jquery": "~2.1.1",
-    "threex.windowresize": "*"
+    "threex.windowresize": "*",
+    "d3": "~3.4.11",
+    "toxiclibsjs": "~0.2.7"
   }
 }

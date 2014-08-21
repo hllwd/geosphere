@@ -1,12 +1,12 @@
 /**
  * Created by nicolasmondon on 16/08/2014.
  */
-;!function(th, thx, $, Detector, win){
+;!function(th, thx, $, Detector, toxi, d3, win){
 
     var container, scene, camera, renderer;
     var controls;
 
-    var radiusSphere = 100, radiusCountries = 100.5;
+    var radiusSphere = 100, radiusCountries = 102;
 
     var shaderMaterial;
 
@@ -80,7 +80,7 @@
 
         drawSphere();
 
-        drawCountries(raw.features);
+        drawCountriesToxi(raw.features);
 
         animate();
     };
@@ -130,6 +130,61 @@
                 });
             }
         });
+    };
+
+    function drawCountriesToxi(countries){
+        countries.forEach(function(feat){
+            if(feat.geometry.type === 'Polygon'){
+                var poly = coordToToxicPoly(feat.geometry.coordinates[0]);
+                poly = createInsidePoints(poly);
+                var points = poly.map(function(vec){
+                    return latLong2Cart(vec.x, vec.y, radiusCountries);
+                });
+                drawCountryToxi(points, 0xFF0000);
+            }else { // multiple polygons
+                feat.geometry.coordinates.forEach(function(coords){
+                    var poly = coordToToxicPoly(coords[0]);
+                    poly = createInsidePoints(poly);
+                    var points = poly.map(function(vec){
+                        return latLong2Cart(vec.x, vec.y, radiusCountries);
+                    });
+                    drawCountryToxi(points, 0xFF0000);
+                });
+            }
+        });
+    };
+
+    function coordToToxicPoly(coords){
+        var poly = new toxi.geom.Polygon2D();
+        coords.forEach(function(vert){
+            var vec = new toxi.geom.Vec2D({
+                x: vert[0],
+                y: vert[1]
+            });
+            poly.add(vec);
+        });
+        return poly;
+    };
+
+    function createInsidePoints(poly){
+        var bounds = poly.getBounds();
+        var insidePoints = new Array();
+        /*poly.vertices.forEach(function(vertex){
+            insidePoints.push(vertex);
+        });*/
+        var step = 3;
+        for(var i = parseInt(bounds.x); i <= parseInt(bounds.x + bounds.width +.5); i += step){
+            for(var j = parseInt(bounds.y); j <= parseInt(bounds.y + bounds.height +.5); j += step){
+                var currentVec = new toxi.geom.Vec2D({
+                    x: i,
+                    y: j
+                });
+                if(poly.containsPoint(currentVec)){
+                    insidePoints.push(currentVec);
+                }
+            }
+        }
+        return insidePoints;
     };
 
     /**
@@ -186,6 +241,22 @@
 
     };
 
+    function drawCountryToxi(points, color){
+        points.forEach(function(point){
+            var material = new THREE.LineBasicMaterial({
+                color: 0x0000ff
+            });
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(
+                new th.Vector3(0,9,9),
+                point
+            );
+            var line = new THREE.Line( geometry, material );
+            scene.add( line );
+        });
+
+    };
+
     /**
      * @see http://threejs.org/docs/#Reference/Extras.Core/CurvePath
      * @param points
@@ -238,4 +309,4 @@
 
     $.getJSON('data/countries.geo.json').done(onSetup);
 
-}(THREE, THREEx, jQuery, Detector, window);
+}(THREE, THREEx, jQuery, Detector, toxi, d3, window);
