@@ -1,7 +1,7 @@
 /**
  * Created by nicolasmondon on 16/08/2014.
  */
-;!function(th, thx, $, Detector, toxi, d3, win){
+;!function(th, thx, $, Detector, toxi, d3, Delaunay, win){
 
     var container, scene, camera, renderer;
     var controls;
@@ -90,7 +90,7 @@
     };
 
     function animate() {
-        requestAnimationFrame(animate);
+        //requestAnimationFrame(animate);
         render();
         update();
     };
@@ -133,14 +133,24 @@
     };
 
     function drawCountriesToxi(countries){
+        var flag = true;
         countries.forEach(function(feat){
             if(feat.geometry.type === 'Polygon'){
                 var poly = coordToToxicPoly(feat.geometry.coordinates[0]);
-                poly = createInsidePoints(poly);
-                var points = poly.map(function(vec){
+                var vecs = createInsidePoints(poly);
+                var triangles = Delaunay.triangulate(
+                    vecs.map(function(vec){
+                        return [vec.x, vec.y];
+                    })
+                );
+                var points = vecs.map(function(vec){
                     return latLong2Cart(vec.x, vec.y, radiusCountries);
                 });
-                drawCountryToxi(points, 0xFF0000);
+                if(triangles.length > 12 && points.length > 10 && flag){
+                    drawCountryMeshToxi(points, triangles, 0xFF0000);
+                    flag = false;
+                }
+
             }else { // multiple polygons
                 feat.geometry.coordinates.forEach(function(coords){
                     var poly = coordToToxicPoly(coords[0]);
@@ -214,10 +224,6 @@
         scene.add(mesh);
     };
 
-    function triangulate(){
-
-    };
-
     // https://github.com/ironwallaby/delaunay
     // http://forum.processing.org/one/topic/drawing-countries-on-top-of-a-3d-sphere-from-set-of-boundaries.html
 
@@ -249,6 +255,23 @@
     };
 
 
+    function drawCountryMeshToxi(points, triangles, color){
+        var mesh;
+        var geometry = new th.Geometry();
+        var material = new th.MeshBasicMaterial( { color: color } );
+        material.side = th.DoubleSide;
+        geometry.vertices = points;
+
+        for(var i=0; i<triangles.length-6; i+=3){
+            geometry.faces.push( new th.Face3(
+                points[triangles[i]],
+                points[triangles[i+1]],
+                points[triangles[i+2]]
+            ));
+        }
+        mesh = new th.Mesh( geometry, material );
+        scene.add(mesh);
+    };
 
     function drawCountryToxi(points, color){
         points.forEach(function(point){
@@ -318,4 +341,4 @@
 
     $.getJSON('data/countries.geo.json').done(onSetup);
 
-}(THREE, THREEx, jQuery, Detector, toxi, d3, window);
+}(THREE, THREEx, jQuery, Detector, toxi, d3, Delaunay, window);
