@@ -214,6 +214,9 @@
         scene.add(mesh);
     };
 
+    // https://github.com/ironwallaby/delaunay
+    // http://forum.processing.org/one/topic/drawing-countries-on-top-of-a-3d-sphere-from-set-of-boundaries.html
+
 
     /**
      * @see http://stackoverflow.com/questions/9252764/how-to-create-a-custom-mesh-on-three-js
