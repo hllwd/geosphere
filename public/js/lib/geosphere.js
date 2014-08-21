@@ -6,7 +6,7 @@
     var container, scene, camera, renderer;
     var controls;
 
-    var radiusSphere = 100, radiusCountries = 102;
+    var radiusSphere = 100, radiusCountries = 101;
 
     var shaderMaterial;
 
