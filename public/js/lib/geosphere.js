@@ -214,6 +214,10 @@
         scene.add(mesh);
     };
 
+    function triangulate(){
+
+    };
+
     // https://github.com/ironwallaby/delaunay
     // http://forum.processing.org/one/topic/drawing-countries-on-top-of-a-3d-sphere-from-set-of-boundaries.html
 
@@ -243,6 +247,8 @@
         scene.add(mesh);
 
     };
+
+
 
     function drawCountryToxi(points, color){
         points.forEach(function(point){
