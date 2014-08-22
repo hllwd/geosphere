@@ -6,7 +6,7 @@
     var container, scene, camera, renderer;
     var controls;
 
-    var radiusSphere = 100, radiusCountries = 105;
+    var radiusSphere = 100, radiusCountries = 100.5;
 
     var shaderMaterial;
 
@@ -80,7 +80,9 @@
 
         drawSphere();
 
-        drawCountriesToxi(raw.features);
+        drawCountriesLine(raw.features);
+
+        drawCountriesMesh(raw.features);
 
         animate();
     };
@@ -120,19 +122,19 @@
         scene.add(sphereMesh);
     };
 
-    function drawCountries(countries){
+    function drawCountriesLine(countries){
         countries.forEach(function(feat){
             if(feat.geometry.type === 'Polygon'){
-                drawCountry(feat.geometry.coordinates[0], 0xFF0000);
+                drawCountryLine(feat.geometry.coordinates[0], 0x00FF00);
             }else { // multiple polygons
                 feat.geometry.coordinates.forEach(function(poly){
-                    drawCountry(poly[0], 0xFF0000);
+                    drawCountryLine(poly[0], 0x00FF00);
                 });
             }
         });
     };
 
-    function drawCountriesToxi(countries){
+    function drawCountriesMesh(countries){
         countries.forEach(function(feat, i){
             if(feat.geometry.type === 'Polygon'){
                 computeContry(feat.geometry.coordinates[0]);
@@ -147,6 +149,7 @@
     function computeContry(coords){
         var poly = coordToToxicPoly(coords);
         var vecs = createInsidePoints(poly);
+        // thx https://github.com/ironwallaby/delaunay
         var delaunayTriangulation = Delaunay.triangulate(
             vecs.map(function(vec){
                 return [vec.x, vec.y];
@@ -174,7 +177,7 @@
         });
         if(triangles.length && triangles.length > 0
             && points.length && points.length > 2){
-            drawCountryMeshToxi(points, triangles, 0xFF0000);
+            drawCountryMesh(points, triangles, triangles.length % 2 === 0 ? 0xFF0000 : 0x0000FF);
         }
     };
 
@@ -196,7 +199,7 @@
         poly.vertices.forEach(function(vertex, i){
             insidePoints.push(vertex);
         });
-        var step = 2;
+        var step = 3;
         for(var i = parseInt(bounds.x); i <= parseInt(bounds.x + bounds.width +.5); i += step){
             for(var j = parseInt(bounds.y); j <= parseInt(bounds.y + bounds.height +.5); j += step){
                 var currentVec = new toxi.geom.Vec2D({
@@ -216,60 +219,20 @@
      * @param points
      * @param color
      */
-    function drawCountry(points, color){
+    function drawCountryLine(points, color){
         var curvePath = createCurvePath(points);
         var lineGeometry = new THREE.Geometry();
         lineGeometry.vertices = curvePath.getPoints(500);
         lineGeometry.computeLineDistances();
         var lineMaterial = new THREE.LineBasicMaterial();
         lineMaterial.color = new THREE.Color(color);
-        lineMaterial.linewidth = 2;
+        lineMaterial.linewidth = 3;
         var line = new THREE.Line( lineGeometry, lineMaterial );
         scene.add(line);
     };
 
-    function drawCountry2(points, color){
-        var curvePath = createCurvePath(points);
-        var shape = new th.Shape(curvePath.getPoints(500));
-        var shapeGeometry = new th.ShapeGeometry(shape);
-        var shapeMaterial = new THREE.MeshLambertMaterial( { color: color } );
-        shapeMaterial.side = th.DoubleSide;
-        var mesh = new th.Mesh(shapeGeometry, shapeMaterial);
-        scene.add(mesh);
-    };
 
-    // https://github.com/ironwallaby/delaunay
-    // http://forum.processing.org/one/topic/drawing-countries-on-top-of-a-3d-sphere-from-set-of-boundaries.html
-
-
-    /**
-     * @see http://stackoverflow.com/questions/9252764/how-to-create-a-custom-mesh-on-three-js
-     * @param points
-     * @param color
-     */
-    function drawCountry3(points, color){
-        var triangles, mesh;
-        var holes = [];
-
-        var curvePath = createCurvePath(points);
-        var vertices = curvePath.getPoints(250);
-        var geometry = new th.Geometry();
-        var material = new th.MeshBasicMaterial( { color: color } );
-        material.side = th.DoubleSide;
-
-        geometry.vertices = vertices;
-        triangles = th.Shape.Utils.triangulateShape ( vertices, holes );
-
-        for( var i = 0; i < triangles.length; i++ ){
-            geometry.faces.push( new th.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
-        }
-        mesh = new th.Mesh( geometry, material );
-        scene.add(mesh);
-
-    };
-
-
-    function drawCountryMeshToxi(points, triangles, color){
+    function drawCountryMesh(points, triangles, color){
         var mesh;
         var geometry = new th.Geometry();
         var material = new th.MeshBasicMaterial( {
@@ -285,22 +248,6 @@
 
         mesh = new th.Mesh( geometry, material );
         scene.add(mesh);
-    };
-
-    function drawCountryToxi(points, color){
-        points.forEach(function(point){
-            var material = new THREE.LineBasicMaterial({
-                color: 0x0000ff
-            });
-            var geometry = new THREE.Geometry();
-            geometry.vertices.push(
-                new th.Vector3(0,9,9),
-                point
-            );
-            var line = new THREE.Line( geometry, material );
-            scene.add( line );
-        });
-
     };
 
     /**
