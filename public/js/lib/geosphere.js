@@ -3,14 +3,10 @@
  */
 ;!function(th, thx, $, Detector, toxi, d3, Delaunay, _, queue, win, criterion){
 
-    // data from http://data.undp.org/resource/7p2z-5b33.json
-
     var container, scene, camera, renderer;
     var controls;
 
     var radiusSphere = 100, radiusCountries = 101, radiusLine = 101.2;
-
-    var shaderMaterial;
 
     var countryDatas;
 
@@ -85,8 +81,6 @@
         axes = new th.AxisHelper(200);
         //scene.add(axes);
 
-        // setupShaderMaterial();
-
         drawSphere();
 
         drawCountriesLine(raw.features);
@@ -114,16 +108,6 @@
 
     function render() {
         renderer.render(scene, camera);
-    };
-
-    function setupShaderMaterial(){
-        var vShader = $('#vertexshader');
-        var fShader = $('#fragmentshader');
-        shaderMaterial =
-            new THREE.ShaderMaterial({
-                vertexShader:   vShader.text(),
-                fragmentShader: fShader.text()
-            });
     };
 
     // from http://stackoverflow.com/questions/15478093/realistic-lighting-sunlight-with-th-js

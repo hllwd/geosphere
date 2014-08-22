@@ -1,0 +1,19 @@
+
+.container {
+    z-index: 1;
+}
+
+/* source */
+.source {
+    z-index: 2;
+    position: fixed;
+    color: white;
+    right: 10px;
+    bottom: 10px;
+    font: 11px 'Lucida Grande', sans-serif;
+    text-align: right;
+}
+
+.source a {
+    color: white;
+}
