@@ -354,9 +354,13 @@
 
     function createQuadraticCurve(pt1, pt2){
         var curvePath = new th.CurvePath();
+        var dist = d3.geo.distance(pt1, pt2);
+        var scaleDist = d3.scale.linear()
+            .domain([0, 2])
+            .range([1.1, 2]);
         var quadCurve = new th.QuadraticBezierCurve3(
             latLong2Cart(pt1[0], pt1[1], radiusCountries),
-            latLong2Cart((pt1[0] + pt2[0]) / 2, (pt1[1] + pt2[1]) / 2, radiusCountries * 1.25),
+            latLong2Cart((pt1[0] + pt2[0]) / 2, (pt1[1] + pt2[1]) / 2, radiusCountries * scaleDist(dist)),
             latLong2Cart(pt2[0], pt2[1], radiusCountries)
         );
         curvePath.add(quadCurve);
