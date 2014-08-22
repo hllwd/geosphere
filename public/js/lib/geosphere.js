@@ -1,12 +1,12 @@
 /**
  * Created by nicolasmondon on 16/08/2014.
  */
-;!function(th, thx, $, Detector, toxi, d3, Delaunay, win){
+;!function(th, thx, $, Detector, toxi, d3, Delaunay, _, win){
 
     var container, scene, camera, renderer;
     var controls;
 
-    var radiusSphere = 100, radiusCountries = 101;
+    var radiusSphere = 100, radiusCountries = 105;
 
     var shaderMaterial;
 
@@ -90,7 +90,7 @@
     };
 
     function animate() {
-        //requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
         render();
         update();
     };
@@ -133,35 +133,49 @@
     };
 
     function drawCountriesToxi(countries){
-        var flag = true;
-        countries.forEach(function(feat){
+        countries.forEach(function(feat, i){
             if(feat.geometry.type === 'Polygon'){
-                var poly = coordToToxicPoly(feat.geometry.coordinates[0]);
-                var vecs = createInsidePoints(poly);
-                var triangles = Delaunay.triangulate(
-                    vecs.map(function(vec){
-                        return [vec.x, vec.y];
-                    })
-                );
-                var points = vecs.map(function(vec){
-                    return latLong2Cart(vec.x, vec.y, radiusCountries);
-                });
-                if(triangles.length > 12 && points.length > 10 && flag){
-                    drawCountryMeshToxi(points, triangles, 0xFF0000);
-                    flag = false;
-                }
-
+                computeContry(feat.geometry.coordinates[0]);
             }else { // multiple polygons
                 feat.geometry.coordinates.forEach(function(coords){
-                    var poly = coordToToxicPoly(coords[0]);
-                    poly = createInsidePoints(poly);
-                    var points = poly.map(function(vec){
-                        return latLong2Cart(vec.x, vec.y, radiusCountries);
-                    });
-                    drawCountryToxi(points, 0xFF0000);
+                    computeContry(coords[0]);
                 });
             }
         });
+    };
+
+    function computeContry(coords){
+        var poly = coordToToxicPoly(coords);
+        var vecs = createInsidePoints(poly);
+        var delaunayTriangulation = Delaunay.triangulate(
+            vecs.map(function(vec){
+                return [vec.x, vec.y];
+            })
+        );
+        var triangles = [];
+        for(var i=0; i<delaunayTriangulation.length -2; i+=3){
+            triangles.push([
+                delaunayTriangulation[i],
+                delaunayTriangulation[i+1],
+                delaunayTriangulation[i+2]
+            ]);
+        }
+        // remove convexe faces
+        triangles = _.remove(triangles, function(tr){
+            var centre = new toxi.geom.Vec2D({
+                x: d3.mean(tr, function(t){ return vecs[t].x; }),
+                y: d3.mean(tr, function(t){ return vecs[t].y; })
+            });
+            return poly.containsPoint(centre);
+        });
+
+        var points = vecs.map(function(vec){
+            return latLong2Cart(vec.x, vec.y, radiusCountries);
+        });
+        if(triangles.length && triangles.length > 0
+            && points.length && points.length > 2){
+            drawCountryMeshToxi(points, triangles, 0xFF0000);
+        }
     };
 
     function coordToToxicPoly(coords){
@@ -179,10 +193,10 @@
     function createInsidePoints(poly){
         var bounds = poly.getBounds();
         var insidePoints = new Array();
-        /*poly.vertices.forEach(function(vertex){
+        poly.vertices.forEach(function(vertex, i){
             insidePoints.push(vertex);
-        });*/
-        var step = 3;
+        });
+        var step = 2;
         for(var i = parseInt(bounds.x); i <= parseInt(bounds.x + bounds.width +.5); i += step){
             for(var j = parseInt(bounds.y); j <= parseInt(bounds.y + bounds.height +.5); j += step){
                 var currentVec = new toxi.geom.Vec2D({
@@ -258,17 +272,17 @@
     function drawCountryMeshToxi(points, triangles, color){
         var mesh;
         var geometry = new th.Geometry();
-        var material = new th.MeshBasicMaterial( { color: color } );
+        var material = new th.MeshBasicMaterial( {
+            color: color,
+            wireframe: true
+        } );
         material.side = th.DoubleSide;
         geometry.vertices = points;
 
-        for(var i=0; i<triangles.length-6; i+=3){
-            geometry.faces.push( new th.Face3(
-                points[triangles[i]],
-                points[triangles[i+1]],
-                points[triangles[i+2]]
-            ));
-        }
+        triangles.forEach(function(tr){
+            geometry.faces.push( new th.Face3(tr[0],tr[1],tr[2]) );
+        });
+
         mesh = new th.Mesh( geometry, material );
         scene.add(mesh);
     };
@@ -341,4 +355,4 @@
 
     $.getJSON('data/countries.geo.json').done(onSetup);
 
-}(THREE, THREEx, jQuery, Detector, toxi, d3, Delaunay, window);
+}(THREE, THREEx, jQuery, Detector, toxi, d3, Delaunay, _, window);
