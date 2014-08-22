@@ -8,7 +8,7 @@
     var container, scene, camera, renderer;
     var controls;
 
-    var radiusSphere = 100, radiusCountries = 101, radiusLine = 101.5;
+    var radiusSphere = 100, radiusCountries = 101, radiusLine = 101.2;
 
     var shaderMaterial;
 
@@ -16,7 +16,7 @@
 
     var maxCriterion, minCriterion, scaleCriterion;
 
-    function onSetup(error, raw, dc){
+    function onSetup(error, raw, dc, ll){
 
         // width
         var w = win.innerWidth;
@@ -93,6 +93,8 @@
 
         drawCountriesMesh(raw.features);
 
+        drawCurves(ll);
+
         animate();
     };
 
@@ -152,6 +154,21 @@
 
         scene.add(hemiLight);
         scene.add(dirLight);
+    };
+
+    function drawCurves(llDatas){
+        llDatas.forEach(function(ll){
+            var curve = createQuadraticCurve(ll[0], ll[1]);
+            var lineGeometry = new THREE.Geometry();
+            lineGeometry.vertices = curve.getPoints(200);
+            lineGeometry.computeLineDistances();
+            var lineMaterial = new THREE.LineBasicMaterial();
+            lineMaterial.color = new THREE.Color(0x0FFFF0);
+            lineMaterial.linewidth = 3;
+            var line = new THREE.Line( lineGeometry, lineMaterial );
+            scene.add(line);
+        });
+
     };
 
     function drawSphere(){
@@ -335,6 +352,17 @@
         return curvePath;
     };
 
+    function createQuadraticCurve(pt1, pt2){
+        var curvePath = new th.CurvePath();
+        var quadCurve = new th.QuadraticBezierCurve3(
+            latLong2Cart(pt1[0], pt1[1], radiusCountries),
+            latLong2Cart((pt1[0] + pt2[0]) / 2, (pt1[1] + pt2[1]) / 2, radiusCountries * 1.25),
+            latLong2Cart(pt2[0], pt2[1], radiusCountries)
+        );
+        curvePath.add(quadCurve);
+        return curvePath;
+    };
+
 
     /**
      * @see https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Earth-LatLon.html
@@ -370,6 +398,7 @@
     queue()
         .defer(d3.json, 'data/countries.geo.json')
         .defer(d3.csv, 'data/life_expectancy.csv')
+        .defer(d3.json, 'data/latlong.json')
         .await(onSetup);
 
 
