@@ -110,7 +110,7 @@
         var hemiLight = new th.HemisphereLight(0xffffff, 0xffffff, 0.6);
         hemiLight.position.set(0, 500, 0);
 
-        var dirLight = new th.DirectionalLight(0xffffff, 0.6);
+        var dirLight = new th.DirectionalLight(0xffffff, 0.9);
         dirLight.position.set(-1, 0.75, 1);
         dirLight.position.multiplyScalar(50);
         dirLight.name = 'dirlight';
@@ -136,7 +136,7 @@
 
     function drawSphere(){
         var sphereGeometry = new th.SphereGeometry(radiusSphere, 64, 64);
-        var sphereMesh = new th.Mesh(sphereGeometry, new th.MeshLambertMaterial({ color: 0x6666CC }));
+        var sphereMesh = new th.Mesh(sphereGeometry, new th.MeshLambertMaterial({ color: 0x6666FF }));
         sphereMesh.position = new th.Vector3(0,0,0);
         scene.add(sphereMesh);
 
