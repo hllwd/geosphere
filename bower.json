@@ -19,6 +19,7 @@
     "threex.windowresize": "*",
     "d3": "~3.4.11",
     "toxiclibsjs": "~0.2.7",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "queue-async": "~1.0.7"
   }
 }

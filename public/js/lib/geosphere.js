@@ -1,7 +1,9 @@
 /**
  * Created by nicolasmondon on 16/08/2014.
  */
-;!function(th, thx, $, Detector, toxi, d3, Delaunay, _, win){
+;!function(th, thx, $, Detector, toxi, d3, Delaunay, _, queue, win, criterion){
+
+    // data from http://data.undp.org/resource/7p2z-5b33.json
 
     var container, scene, camera, renderer;
     var controls;
@@ -10,7 +12,11 @@
 
     var shaderMaterial;
 
-    function onSetup(raw){
+    var countryDatas;
+
+    var maxCriterion, minCriterion, scaleCriterion;
+
+    function onSetup(error, raw, dc){
 
         // width
         var w = win.innerWidth;
@@ -21,6 +27,20 @@
         var near = 0.1;
         var far = 20000;
         var axes;
+
+        countryDatas = dc.filter(function(d){
+            return d.YEAR === '2012';
+        });
+
+        maxCriterion = d3.max(dc, function(d){
+            return parseFloat(d[criterion]);
+        });
+        minCriterion = d3.min(dc, function(d){
+            return parseFloat(d[criterion]);
+        });
+        scaleCriterion = d3.scale.linear()
+            .domain([minCriterion, maxCriterion])
+            .range([0,1]);
 
         // set up dom ready callback
         $(onDomReady);
@@ -165,16 +185,16 @@
     function drawCountriesMesh(countries){
         countries.forEach(function(feat, i){
             if(feat.geometry.type === 'Polygon'){
-                computeContry(feat.geometry.coordinates[0]);
+                computeContry(feat.geometry.coordinates[0], feat.id);
             }else { // multiple polygons
                 feat.geometry.coordinates.forEach(function(coords){
-                    computeContry(coords[0]);
+                    computeContry(coords[0], feat.id);
                 });
             }
         });
     };
 
-    function computeContry(coords){
+    function computeContry(coords, id){
         var poly = coordToToxicPoly(coords);
         var vecs = createInsidePoints(poly);
         // thx https://github.com/ironwallaby/delaunay
@@ -205,9 +225,29 @@
         });
         if(triangles.length && triangles.length > 0
             && points.length && points.length > 2){
-            drawCountryMesh(points, triangles, triangles.length % 2 === 0 ? 0xFF0000 : 0x0000FF);
+            drawCountryMesh(points, triangles, getColorByCriterion(id));
         }
     };
+
+    function getColorByCriterion(id){
+
+        var currentCountry = _.find(countryDatas, function(cd){
+            return id === cd.COUNTRY;
+        });
+
+        if(typeof(currentCountry) !== 'undefined'){
+            return new th.Color(
+                scaleCriterion(parseFloat(currentCountry[criterion]))
+                , 0
+                , 0);
+        }
+        else {
+            return new th.Color(0,0,0);
+        }
+
+    };
+
+
 
     function coordToToxicPoly(coords){
         var poly = new toxi.geom.Polygon2D();
@@ -327,6 +367,12 @@
         return 2 * Math.PI * x / 360;
     };
 
-    $.getJSON('data/countries.geo.json').done(onSetup);
+    queue()
+        .defer(d3.json, 'data/countries.geo.json')
+        .defer(d3.csv, 'data/life_expectancy.csv')
+        .await(onSetup);
 
-}(THREE, THREEx, jQuery, Detector, toxi, d3, Delaunay, _, window);
+
+    // $.getJSON('data/countries.geo.json').done(onSetup);
+
+}(THREE, THREEx, jQuery, Detector, toxi, d3, Delaunay, _, queue, window, 'Numeric');
