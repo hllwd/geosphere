@@ -6,7 +6,7 @@
     var container, scene, camera, renderer;
     var controls;
 
-    var radiusSphere = 100, radiusCountries = 100.5;
+    var radiusSphere = 100, radiusCountries = 101, radiusLine = 101.5;
 
     var shaderMaterial;
 
@@ -21,9 +21,6 @@
         var near = 0.1;
         var far = 20000;
         var axes;
-        var skyBoxGeometry;
-        var skyBoxMaterial;
-        var skyBox;
 
         // set up dom ready callback
         $(onDomReady);
@@ -62,21 +59,13 @@
         // controls
         controls = new th.TrackballControls(camera, renderer.domElement);
 
+        setupLight();
+
         // axes
         axes = new th.AxisHelper(200);
-        scene.add(axes);
+        //scene.add(axes);
 
-        // sky
-        // ! make sure the camera's far is big enough to render the sky
-        skyBoxGeometry = new th.BoxGeometry(10000, 10000, 10000);
-        skyBoxMaterial = new th.MeshBasicMaterial({
-            color: 0xffffff,
-            side: th.BackSide
-        });
-        skyBox = new th.Mesh(skyBoxGeometry, skyBoxMaterial);
-        scene.add(skyBox);
-
-        setupShaderMaterial();
+        // setupShaderMaterial();
 
         drawSphere();
 
@@ -115,11 +104,50 @@
             });
     };
 
+    // from http://stackoverflow.com/questions/15478093/realistic-lighting-sunlight-with-th-js
+    function setupLight() {
+        // lights
+        var hemiLight = new th.HemisphereLight(0xffffff, 0xffffff, 0.6);
+        hemiLight.position.set(0, 500, 0);
+
+        var dirLight = new th.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(-1, 0.75, 1);
+        dirLight.position.multiplyScalar(50);
+        dirLight.name = 'dirlight';
+        //dirLight.shadowCameraVisible = true;
+
+        dirLight.castShadow = true;
+        dirLight.shadowMapWidth = dirLight.shadowMapHeight = 1024 * 2;
+
+        var d = 300;
+
+        dirLight.shadowCameraLeft = -d;
+        dirLight.shadowCameraRight = d;
+        dirLight.shadowCameraTop = d;
+        dirLight.shadowCameraBottom = -d;
+
+        dirLight.shadowCameraFar = 3500;
+        dirLight.shadowBias = -0.0001;
+        dirLight.shadowDarkness = 0.35;
+
+        scene.add(hemiLight);
+        scene.add(dirLight);
+    };
+
     function drawSphere(){
         var sphereGeometry = new th.SphereGeometry(radiusSphere, 64, 64);
-        var sphereMesh = new th.Mesh(sphereGeometry, shaderMaterial);
+        var sphereMesh = new th.Mesh(sphereGeometry, new th.MeshLambertMaterial({ color: 0x6666CC }));
         sphereMesh.position = new th.Vector3(0,0,0);
         scene.add(sphereMesh);
+
+        var increment = 3;
+        var outlineMaterial = new th.MeshLambertMaterial({ color: 0xDDDDEE, side: th.BackSide });
+        var outlineGeometry = new th.SphereGeometry(
+            radiusSphere + increment, 64 + increment, 64 + increment
+            );
+        var outlineMesh = new th.Mesh(outlineGeometry, outlineMaterial);
+        outlineMesh.position = new th.Vector3(0,0,0);
+        scene.add(outlineMesh);
     };
 
     function drawCountriesLine(countries){
@@ -226,7 +254,7 @@
         lineGeometry.computeLineDistances();
         var lineMaterial = new THREE.LineBasicMaterial();
         lineMaterial.color = new THREE.Color(color);
-        lineMaterial.linewidth = 3;
+        lineMaterial.linewidth = 1;
         var line = new THREE.Line( lineGeometry, lineMaterial );
         scene.add(line);
     };
@@ -236,8 +264,7 @@
         var mesh;
         var geometry = new th.Geometry();
         var material = new th.MeshBasicMaterial( {
-            color: color,
-            wireframe: true
+            color: color
         } );
         material.side = th.DoubleSide;
         geometry.vertices = points;
@@ -259,8 +286,8 @@
         var curvePath = new th.CurvePath();
         var curve, pt1, pt2;
         for(var i = 0; i < points.length-1; i++){
-            pt1 = latLong2Cart(points[i][0], points[i][1], radiusCountries);
-            pt2 = latLong2Cart(points[i+1][0], points[i+1][1], radiusCountries);
+            pt1 = latLong2Cart(points[i][0], points[i][1], radiusLine);
+            pt2 = latLong2Cart(points[i+1][0], points[i+1][1], radiusLine);
             curve = createCurve(pt1, pt2);
             curvePath.add(curve);
         }
