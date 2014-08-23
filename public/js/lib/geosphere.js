@@ -3,13 +3,15 @@
  */
 ;!function(th, thx, $, Detector, toxi, d3, Delaunay, _, queue, win, criterion){
 
+    // three js global vars
     var container, scene, camera, renderer;
     var controls;
 
+    // radisu
     var radiusSphere = 100, radiusCountries = 101, radiusLine = 101.2;
 
+    // data globar vars
     var countryDatas;
-
     var maxCriterion, minCriterion, scaleCriterion;
 
     function onSetup(error, raw, dc, ll){
@@ -38,9 +40,6 @@
             .domain([minCriterion, maxCriterion])
             .range([0,1]);
 
-        // set up dom ready callback
-        $(onDomReady);
-
         // scene
         scene = new th.Scene();
 
@@ -56,7 +55,8 @@
         // renderer
         if (Detector.webgl) {
             renderer = new th.WebGLRenderer({
-                antialias: true
+                antialias: true,
+                precision: 'highp'
             });
         } else {
             renderer = new th.CanvasRenderer();
@@ -90,10 +90,6 @@
         drawCurves(ll);
 
         animate();
-    };
-
-    function onDomReady(){
-
     };
 
     function animate() {
@@ -237,18 +233,12 @@
         });
 
         if(typeof(currentCountry) !== 'undefined'){
-            return new th.Color(
-                scaleCriterion(parseFloat(currentCountry[criterion]))
-                , 0
-                , 0);
+            return new th.Color(scaleCriterion(parseFloat(currentCountry[criterion])), 0, 0);
         }
         else {
             return new th.Color(0,0,0);
         }
-
     };
-
-
 
     function coordToToxicPoly(coords){
         var poly = new toxi.geom.Polygon2D();
